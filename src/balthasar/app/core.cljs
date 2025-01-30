@@ -3,10 +3,11 @@
    [uix.core :as uix :refer [defui $]]
    [uix.dom :as dom]
    [balthasar.app.config :as config]
+   [balthasar.app.video :as video]
    [re-frame.core :as re-frame]))
 
 (defui app []
-  ($ :div "Hello, world!"))
+  ($  video/video-upload {:on-upload-complete #(println "video uploaded" %)}))
 
 (defn dev-setup []
   (when config/debug?

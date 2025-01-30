@@ -3,6 +3,7 @@
             [balthasar.middleware :as mid]
             [balthasar.ui :as ui]
             [balthasar.settings :as settings]
+            [balthasar.video :as video]
             [rum.core :as rum]
             [xtdb.api :as xt]
             [ring.adapter.jetty9 :as jetty]
@@ -155,5 +156,8 @@
             ["/set-foo" {:post set-foo}]
             ["/set-bar" {:post set-bar}]
             ["/chat" {:get ws-handler}]]
-   :api-routes [["/api/echo" {:post echo}]]
+   :api-routes ["/api"
+                ["/v1"
+                 ["/echo" {:post echo}]
+                 ["/upload-video" {:post video/handle-upload}]]]
    :on-tx notify-clients})
