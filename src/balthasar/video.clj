@@ -45,7 +45,8 @@
 (defn error-response [string]
   {:status 400
    :headers {"Content-Type" "application/json"}
-   :body (json/generate-string {:error string})})
+   :body (json/generate-string {:success false
+                                :message string})})
 
 (defn upload [file id content-type] (convert-to-hls (.getPath file) (str "target/resources/public/videos/" id "/")))
 
@@ -59,7 +60,6 @@
       (> size max-size)
       (error-response "File too large")
 
-
       :else
       (let [video-id (generate-video-id)
             ext (last (str/split filename #"\."))
@@ -70,8 +70,9 @@
 
         (let [response {:status 200
                         :headers {"Content-Type" "application/json"}
-                        :body (json/generate-string {:id video-id
-                                                     :url cdn-url
+                        :body (json/generate-string {;success true
+                                                     :message "Upload successful"
+                                                     :chapter-id video-id
                                                      :size size})}]
           (biff/pprint response)
           response)))
@@ -80,4 +81,27 @@
       (biff/pprint e)
       {:status 500
        :headers {"Content-Type" "application/json"}
-       :body (json/generate-string {:error (.getMessage e)})})))
+       :body (json/generate-string {:success false
+                                    :message (.getMessage e)})})))
+
+(defn serve-hls [req]
+  (let [{{:keys [id file]} :path-params} req
+        _ (biff/pprint (:headers req))
+        playlist-path (str "target/resources/public/videos/" id "/" file)
+        outfile (io/file playlist-path)]
+    (if (.exists outfile)
+      (if (= "playlist.m3u8" file)
+        {:status 200
+         :headers {"Content-Type" "application/x-mpegURL"
+                   "Content-Length" (str (.length outfile))
+                   "Access-Control-Allow-Origin" "*"}  ; If needed for CORS
+         :body (slurp outfile)}
+        (let [file-stream (io/input-stream outfile)]
+          {:status 200
+           :headers {"Content-Type" "video/mp2t"
+                     "Content-Length" (str (.length outfile))
+                     "Access-Control-Allow-Origin" "*"}  ; If needed for CORS
+           :body file-stream}))
+      {:status 400
+       :body {:success false
+              :message "Video not found"}})))

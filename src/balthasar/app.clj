@@ -159,5 +159,6 @@
    :api-routes ["/api"
                 ["/v1"
                  ["/echo" {:post echo}]
+                 ["/video/:id/:file" {:get video/serve-hls}]
                  ["/upload-video" {:post video/handle-upload}]]]
    :on-tx notify-clients})

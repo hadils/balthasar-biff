@@ -50,7 +50,7 @@
       muuntaja/wrap-params
       muuntaja/wrap-format
       (rd/wrap-defaults
-       (assoc-in rd/api-defaults [:params :multipart] true)))) ; add multipart for video uploads
+       (assoc-in rd/api-defaults [:params :multipart] true))))
 
 (defn wrap-base-defaults [handler]
   (-> handler

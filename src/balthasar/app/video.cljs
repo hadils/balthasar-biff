@@ -1,6 +1,7 @@
 (ns balthasar.app.video
   (:require
-   [uix.core :as uix :refer [defui $]]))
+   [uix.core :as uix :refer [defui $]]
+   ["video.js" :as videojs]))
 
 (defui video-upload [{:keys [on-upload-complete]}]
   (let [[video set-video!] (uix/use-state nil)
@@ -72,3 +73,63 @@
             (if (pos? progress)
               (str "Uploading... " progress "%")
               "Upload Video"))))))
+
+(defui video-player [{:keys [options on-ready]}]
+  (let [video-ref (uix/use-ref nil)
+        player-ref (uix/use-ref nil)]
+
+    ;; Initialize player
+    (uix/use-effect
+     (fn []
+       (when-not @player-ref
+         (let [video-element (.createElement js/document "video-js")]
+           (.add (.-classList video-element) "vjs-big-play-centered")
+           (.appendChild @video-ref video-element)
+
+           (reset! player-ref
+                   (videojs video-element
+                            options
+                            (fn []
+                              (.log videojs "player is ready")
+                              (when on-ready
+                                (on-ready @player-ref)))))))
+
+       ;; Update existing player
+       (when @player-ref
+         (let [player @player-ref]
+           (.autoplay player (.-autoplay options))
+           (.src player (.-sources options)))))
+     [options on-ready])
+
+    ;; Cleanup effect
+    (uix/use-effect
+     (fn []
+       (let [player @player-ref]
+         #(when (and player (not ^js (.isDisposed player)))
+            (.dispose player)
+            (reset! player-ref nil))))
+     [])
+
+    ($ :div {:data-vjs-player true
+             :style {:width "600px"}}
+       ($ :div {:ref video-ref}))))
+
+(defui video-player-page []
+  (let [video-src "http://localhost:8080/api/v1/video/0f0bf116-0241-4d8c-8e0f-94f4c4b991c9/playlist.m3u8"
+        player-ref (uix/use-ref nil)
+        videojs-options (clj->js
+                         {:autoplay true
+                          :controls true
+                          :responsive true
+                          :fluid true
+                          :sources
+                          {:src video-src
+                           :type "application/x-mpegURL"}})]
+    (letfn [(handle-player-ready [player]
+              (reset! player-ref player)
+              (.on player "waiting"
+                   (fn [] (.log videojs "Player is waiting")))
+              (.on player "dispose"
+                   (fn [] (.log videojs "Player will dispose"))))]
+      ($ :div
+         ($ video-player {:options videojs-options :on-ready handle-player-ready})))))

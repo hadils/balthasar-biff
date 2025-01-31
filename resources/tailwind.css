@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@import 'video.js/dist/video-js.css';
+
 @layer base {
   p {
     @apply mb-3;
@@ -15,7 +18,8 @@
     @apply list-decimal;
   }
 
-  ul, ol {
+  ul,
+  ol {
     @apply my-3 pl-10;
   }
 }
@@ -32,4 +36,6 @@
   }
 }
 
-.grecaptcha-badge { visibility: hidden; }
+.grecaptcha-badge {
+  visibility: hidden;
+}

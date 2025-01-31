@@ -7,7 +7,8 @@
    [re-frame.core :as re-frame]))
 
 (defui app []
-  ($  video/video-upload {:on-upload-complete #(println "video uploaded" %)}))
+  #_($  video/video-upload {:on-upload-complete #(println "video uploaded" %)})
+  ($ video/video-player-page))
 
 (defn dev-setup []
   (when config/debug?
